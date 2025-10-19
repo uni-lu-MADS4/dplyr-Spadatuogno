@@ -1,12 +1,15 @@
 ---
 title: "Data wrangling"
-author: "My name"
+author: "Franco Catuogno"
 date: "2025-10-13"
 output: html_document
 editor: source
 ---
 
 
+```{r}
+library(tidyverse)
+```
 
 
 ## Part one - Wrangling
@@ -19,13 +22,22 @@ The first part does not require joins or pivots.
 Assign to the name `judgments` and correct the column types where needed.
 
 ```{r}
-# Write your answer here
+judgments <- read_tsv("https://biostat2.uni.lu/practicals/data/judgments.tsv") |> 
+  mutate(
+    start_date = mdy(start_date),
+    end_date = mdy(end_date)
+  )
 ```
 
 
 ### Use `glimpse()` to identify columns and column types.
+```{r}
+glimpse(judgments)
 
-What are the dimensions of the data set.
+```
+
+What are the dimensions of the data set?
+  There are 188 rows and 158 columns.
 
 
 ### Exercise 1 
@@ -36,27 +48,50 @@ You can combine the following tasks into a single statement.
 Select `gender`, `subject`, `age` and referring to the `STAI` questionnaire.
 
 ```{r}
-# Write your answer here
+judgments |> 
+  select(gender,subject,age, starts_with("STAI"))
 ```
 
 
 #### Select all subjects with `STAI_pre` greater than 65 and `STAI_post` greater than 40
 
 ```{r}
-# Write your answer here
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 |
+           STAI_post > 40)
+
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 &
+           STAI_post > 40)
 ```
 
 
 #### Sort the observations by `STAI_pre` so that the subject with the highest score is on top.
 
 ```{r}
-# Write your answer here
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 |
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre))
+
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 &
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre))
 ```
 
 #### For better readability, move the subject, STAI_pre and STAI_post columns to the first positions.
 
 ```{r}
-# Write your answer here
+# It was already done
 ```
 
 #### Check if the data set contains duplicated rows
@@ -68,9 +103,24 @@ in a de-duplicated table containing unique rows only.
 :::
 
 ```{r}
-# Your answer in code here
-```
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 |
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre)) |> 
+  distinct()
 
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 &
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre)) |> 
+  distinct()
+```
+In the first case (either STAI_pre >65 or STAI_post >40) the number of rows is different, it changes from 40 to 39, meaning that there is only one repetion.
+In the second case (both conditions at the same time) there are no repeated rows.
 
 
 ### Exercise 2
@@ -88,14 +138,51 @@ It should contain "low", "normal" and "high" entries depending on the `STAI_pre`
 #### Arrange the table by `STAI_pre` in a descending manner.
 
 ```{r}
-# Write your answer here
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 |
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre)) |> 
+  mutate(STAI_pre_category = case_when(
+    STAI_pre < 25 ~ "low", 
+    STAI_pre < 65 ~ "medium", 
+    TRUE ~ "normal", 
+  ))
+
 ```
 
 
 ### Display distinct values in `STAI_pre` and `STAI_pre_category`.
 
 ```{r}
-# Write your answer here
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 |
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre)) |> 
+  mutate(STAI_pre_category = case_when(
+    STAI_pre < 25 ~ "low", 
+    STAI_pre < 65 ~ "medium", 
+    TRUE ~ "normal", 
+  )) |> 
+  distinct(STAI_pre)
+
+
+judgments |> 
+  select(gender,subject,age, starts_with("STAI")) |> 
+  relocate(STAI_pre, STAI_post) |> 
+  filter(STAI_pre > 65 |
+           STAI_post > 40) |> 
+  arrange(desc(STAI_pre)) |> 
+  mutate(STAI_pre_category = case_when(
+    STAI_pre < 25 ~ "low", 
+    STAI_pre < 65 ~ "medium", 
+    TRUE ~ "normal", 
+  )) |> 
+  distinct(STAI_pre_category)
+
 ```
 
 
@@ -103,7 +190,12 @@ It should contain "low", "normal" and "high" entries depending on the `STAI_pre`
 Divide all entries in the REI questionnaire by 5, the maximal value.
 
 ```{r}
-# Write your answer here
+judgments |> 
+  mutate(across(starts_with("REI"),\ (x) x / 5)) |> 
+  relocate(starts_with("REI"))
+
+
+
 ```
 
 
