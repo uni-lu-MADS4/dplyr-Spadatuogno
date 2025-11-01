@@ -7,8 +7,37 @@ output: html_document
 ---
 
 
+```{r setup}
+#| include: false
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+judgments <- read_tsv("https://biostat2.uni.lu/practicals/data/judgments.tsv") |> 
+  mutate(
+    start_date = mdy(start_date),
+    end_date = mdy(end_date)
+  )
+```
+
+
 ### Identify the duplicated row
 Identify the duplicated subject.
+
+```{r}
+judgments |> 
+  group_by(subject) |> 
+  summarise(n = n()) |> 
+  filter(n == "2")
+
+```
+The duplicated subject is the number 75.
 
 ### Compute basic statistics for all moral dilemma columns. 
 Compute the mean, the median, the standard deviation as well as min and max values.
@@ -17,7 +46,18 @@ Find meaningful short names for the functions such as `med` for  the median.
 Assign `judgments_condition_stats` to the results.
 
 ```{r}
-# Write your answer here
+judgments|> 
+  select(subject, age, gender, condition, starts_with("moral_dilemma")) |> 
+  pivot_longer(starts_with("moral_dilemma") , 
+              names_to =  "dilemma",
+              values_to = "dilemma_val",
+              names_pattern = "moral_dilemma_(.*)") |> 
+  group_by(dilemma) |> 
+  summarise(mean = mean(dilemma_val),
+            med = median(dilemma_val),
+            stdv = sd(dilemma_val),
+            min = min(dilemma_val),
+            max = max(dilemma_val)) -> judgments_condition_stats
 ```
 
 
@@ -29,7 +69,14 @@ Find the number of subjects by `age`, `gender` and `condition`, e.g. how many 20
 Sort the resulting tibble such that the condition that contains the most populous group is sorted first (i.e. `stress` or `control` appear together). 
 
 ```{r}
-# Write your answer here
+
+judgments|> 
+  select(subject, age, gender, condition) |>
+  group_by(age, gender, condition) |> 
+  summarise(n = n()) |> 
+  arrange(desc(n))
+
+
 ```
 
 Ensure that the resulting tibble does not contain groups.
